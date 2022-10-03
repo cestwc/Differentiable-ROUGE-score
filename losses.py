@@ -12,7 +12,7 @@ class ROUGELoss(torch.nn.Module):
 	def forward(self, logits, labels):
 		# overlap = F.embedding(labels.view(-1), F.softmax(logits.view(-1, logits.shape[-1]), dim=-1).T)
 		overlap =  torch.stack([F.embedding(b, a.T) for a, b in zip(logits.softmax(-1), labels)]).unsqueeze(1)
-		numerator = sudoku(overlap).sum((-2, -1))
+		numerator = - sudoku(overlap).sum((-2, -1))
 		denominators = torch.tensor(overlap.shape[-2:]) - self.n + 1
 		if self.metrics == 'fmeasure':
 			return 2 * numerator / sum(denominators)
