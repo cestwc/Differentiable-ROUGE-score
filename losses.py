@@ -1,6 +1,8 @@
 import torch
 import torch.nn.functional as F
 
+from conv_core import sudoku, diagonal2
+
 class ROUGELoss(torch.nn.Module):
 	def __init__(self, reduction = 'mean', n = 1, metrics='fmeasure'):
 		super(ROUGELoss, self).__init__()
