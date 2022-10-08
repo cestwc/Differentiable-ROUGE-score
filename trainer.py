@@ -5,9 +5,9 @@ from losses import ROUGELoss
 
 class RougeTrainer(Trainer):
 	def compute_loss(self, model, inputs, return_outputs=False):
-		labels = inputs.get("labels")
-		outputs = model(**inputs)
-		logits = outputs.get('logits')
-		loss_fct = ROUGELoss()
-		loss = loss_fct(logits, labels).mean()
+		labels = inputs['labels'].cuda()
+		outputs = model(input_ids = inputs['input_ids'].cuda(), attention_mask = inputs['attention_mask'].cuda())
+		logits = outputs.logits
+		loss_fct = ROUGELoss().cuda()
+		loss = loss_fct(logits, labels)
 		return (loss, outputs) if return_outputs else loss
