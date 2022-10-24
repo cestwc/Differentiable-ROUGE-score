@@ -6,8 +6,8 @@ from conv_core import sudoku, diagonal2
 def discrete_softmax(logits, dim = -1):
 	y_soft = logits.softmax(dim)
 	index = y_soft.max(dim, keepdim=True)[1]
-        y_hard = torch.zeros_like(logits, memory_format=torch.legacy_contiguous_format).scatter_(dim, index, 1.0)
-        return y_hard - y_soft.detach() + y_soft
+	y_hard = torch.zeros_like(logits, memory_format=torch.legacy_contiguous_format).scatter_(dim, index, 1.0)
+	return y_hard - y_soft.detach() + y_soft
 	
 class ROUGELoss(torch.nn.Module):
 	def __init__(self, reduction = 'mean', n = 1, max_length=128):
