@@ -1,0 +1,20 @@
+2022-10-31 00:31:45,240 INFO    MainThread:19483 [internal.py:wandb_internal():92] W&B internal server running at pid: 19483, started at: 2022-10-31 00:31:45.239470
+2022-10-31 00:31:45,306 INFO    WriterThread:19483 [datastore.py:open_for_write():77] open: /home/ruihan/or/Differentiable-ROUGE-score/wandb/offline-run-20221031_003139-1fsle4e4/run-1fsle4e4.wandb
+2022-10-31 00:31:45,306 DEBUG   HandlerThread:19483 [handler.py:handle_request():131] handle_request: run_start
+2022-10-31 00:31:45,333 DEBUG   HandlerThread:19483 [meta.py:__init__():36] meta init
+2022-10-31 00:31:45,333 DEBUG   HandlerThread:19483 [meta.py:__init__():50] meta init done
+2022-10-31 00:31:45,333 DEBUG   HandlerThread:19483 [meta.py:probe():210] probe
+2022-10-31 00:31:45,340 DEBUG   HandlerThread:19483 [meta.py:_setup_git():200] setup git
+2022-10-31 00:31:45,433 DEBUG   HandlerThread:19483 [meta.py:_setup_git():207] setup git done
+2022-10-31 00:31:45,434 DEBUG   HandlerThread:19483 [meta.py:_save_pip():54] save pip
+2022-10-31 00:31:45,435 DEBUG   HandlerThread:19483 [meta.py:_save_pip():68] save pip done
+2022-10-31 00:31:45,436 DEBUG   HandlerThread:19483 [meta.py:_save_conda():75] save conda
+2022-10-31 00:31:53,421 DEBUG   HandlerThread:19483 [meta.py:_save_conda():85] save conda done
+2022-10-31 00:31:53,422 DEBUG   HandlerThread:19483 [meta.py:probe():248] probe done
+2022-10-31 00:33:19,017 WARNING MainThread:19483 [internal.py:wandb_internal():152] Internal process interrupt: 1
+2022-10-31 00:33:22,088 WARNING MainThread:19483 [internal.py:wandb_internal():152] Internal process interrupt: 2
+2022-10-31 00:33:22,089 ERROR   MainThread:19483 [internal.py:wandb_internal():155] Internal process interrupted.
+2022-10-31 00:33:22,328 INFO    SenderThread:19483 [sender.py:finish():1075] shutting down sender
+2022-10-31 00:33:23,049 INFO    WriterThread:19483 [datastore.py:close():281] close: /home/ruihan/or/Differentiable-ROUGE-score/wandb/offline-run-20221031_003139-1fsle4e4/run-1fsle4e4.wandb
+2022-10-31 00:33:23,052 INFO    HandlerThread:19483 [handler.py:finish():739] shutting down handler
+2022-10-31 00:33:23,054 INFO    MainThread:19483 [internal.py:handle_exit():79] Internal process exited

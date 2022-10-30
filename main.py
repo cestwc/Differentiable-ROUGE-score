@@ -17,11 +17,12 @@ training_args = TrainingArguments(
     output_dir= model_name + '-maskedlm',
     overwrite_output_dir=True,
     num_train_epochs=1,
-    max_steps = 70_000,
-    per_device_train_batch_size=2,
+    max_steps = 700_000,
+    per_device_train_batch_size=8,
     save_steps=5_000,
     save_total_limit=20,
     prediction_loss_only=True,
+    dataloader_num_workers=16,
     # learning_rate=3e-4,
     # logging_steps = 2
 )
