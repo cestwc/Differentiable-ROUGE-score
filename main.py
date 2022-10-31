@@ -36,7 +36,7 @@ def collate(batch):
 trainer = RougeTrainer(
     model = model,
     args = training_args,
-    train_dataset = dset['train'].shuffle(1234).shard(3000, 0),
+    train_dataset = dset['train'].shuffle(1234).shard(30, 0),
     eval_dataset = dset['validation'],
     data_collator = collate,
 )
