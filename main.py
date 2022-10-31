@@ -3,7 +3,7 @@ from trainer import RougeTrainer
 from transformers import AutoModelForMaskedLM, TrainingArguments
 import torch
 
-model_name = 'roberta-base'
+model_name = 'bert-base-uncased'
 
 model = AutoModelForMaskedLM.from_pretrained(model_name)
 
@@ -18,11 +18,11 @@ training_args = TrainingArguments(
     overwrite_output_dir=True,
     num_train_epochs=1,
     max_steps = 700_000,
-    per_device_train_batch_size=8,
+    per_device_train_batch_size=4,
     save_steps=5_000,
     save_total_limit=20,
     prediction_loss_only=True,
-    dataloader_num_workers=16,
+    dataloader_num_workers=4,
     # learning_rate=3e-4,
     # logging_steps = 2
 )
