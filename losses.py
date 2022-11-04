@@ -24,13 +24,15 @@ class ROUGELoss(torch.nn.Module):
 		# overlap = F.embedding(labels.view(-1), F.softmax(logits.view(-1, logits.shape[-1]), dim=-1).T)
 		overlap =  torch.stack([F.embedding(b, a.T) for a, b in zip(discrete_softmax(logits, -1), labels)]).unsqueeze(1)
 		overlap = sudoku(overlap).long().float().detach()
-		for k in range(len(overlap)):
-			h = overlap[k].sum(-2).squeeze()
-			v = overlap[k].sum(-1).squeeze()
-			for kh in range(len(h)):
-				for kv in range(len(v)):
-					if h[kh] == 0 and v[kv] == 0:
-						overlap[k, 0, kv, kh] = 0.5
+		# for k in range(len(overlap)):
+		# 	h = overlap[k].sum(-2).squeeze()
+		# 	v = overlap[k].sum(-1).squeeze()
+		# 	for kh in range(len(h)):
+		# 		for kv in range(len(v)):
+		# 			if h[kh] == 0 and v[kv] == 0:
+		# 				overlap[k, 0, kv, kh] = 0.5
+		idx = 0 == (overlap.sum(dim = -1, keepdim = True).repeat(1, 1, 1, overlap.shape[-1]) + overlap.sum(dim = -2, keepdim = True).repeat(1, 1, overlap.shape[-2], 1))
+		overlap[idx] = 0.5
 		overlap = torch.clamp(overlap, 1e-1, 1)
 
 		probs =  torch.stack([F.embedding(b, a.T) for a, b in zip(F.softmax(logits, -1), labels)]).unsqueeze(1)
