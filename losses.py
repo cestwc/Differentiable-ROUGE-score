@@ -33,6 +33,6 @@ class ROUGELoss(torch.nn.Module):
 		denominators = sum(overlap.shape[-2:]) - self.n + 1
 
 		if self.reduction == 'mean':
-			return 1 + (numerators / denominators).mean()
+			return (numerators / denominators).mean()
 		else:
 			return overlap
