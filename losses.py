@@ -30,7 +30,7 @@ class ROUGELoss(torch.nn.Module):
 			for kh in range(len(h)):
 			for kv in range(len(v)):
 				if h[kh] == 0 and v[kv] == 0:
-				overlap[k, 0, kv, kh] = 0.5
+					overlap[k, 0, kv, kh] = 0.5
 		overlap = torch.clamp(overlap, 1e-1, 1)
 
 		probs =  torch.stack([F.embedding(b, a.T) for a, b in zip(F.softmax(logits, -1), labels)]).unsqueeze(1)
