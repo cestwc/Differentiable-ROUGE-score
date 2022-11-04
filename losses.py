@@ -32,8 +32,6 @@ class ROUGELoss(torch.nn.Module):
 		numerators = - (overlap * probs.log()).sum((-2, -1)) * 2
 		denominators = sum(overlap.shape[-2:]) - self.n + 1
 
-
-		# denominators = labels_attend.sum(1)
 		if self.reduction == 'mean':
 			return 1 + (numerators / denominators).mean()
 		else:
