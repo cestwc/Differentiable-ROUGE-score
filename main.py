@@ -31,6 +31,7 @@ def collate(batch):
     batch = ({k: torch.nn.utils.rnn.pad_sequence([dic[k] for dic in batch], batch_first=True, padding_value=1) for k in batch[0]})
     # batch['input_ids'][batch['input_ids'] == -100] = 1
     batch['attention_mask'] = (batch['input_ids'] != 1).long()
+    batch['labels'] = torch.nn.functional.pad(batch['labels'], (0, batch['input_ids'].shape[1] - batch['labels'].shape[1], 0, 0), 'constant', 1)
     return batch
 
 trainer = GGTrainer(

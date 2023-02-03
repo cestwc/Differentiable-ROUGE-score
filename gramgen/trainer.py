@@ -7,5 +7,5 @@ class GGTrainer(Trainer):
 		outputs = model(input_ids = inputs['input_ids'].cuda(), attention_mask = inputs['attention_mask'].cuda())
 		logits = outputs.logits
 		loss_fct = GramGenerateLoss(reduction = 'mean', ignore_index = 1).cuda()
-		loss = loss_fct(logits, labels)
+		loss = loss_fct(logits.transpose(1, 2), labels)
 		return (loss, outputs) if return_outputs else loss
