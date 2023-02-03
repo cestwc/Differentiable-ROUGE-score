@@ -12,7 +12,7 @@ else:
     # The JIT doesn't understand Union, nor torch.dtype here
     DType = int
 
-from conv_core import sudoku, diagonal2
+from .conv_core import sudoku, diagonal2
 
 Tensor = torch.Tensor
 

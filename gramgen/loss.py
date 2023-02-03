@@ -4,8 +4,6 @@ import torch
 from torch import Tensor
 from typing import Callable, Optional
 
-from conv_core import sudoku, diagonal2
-
 class GramGenerateLoss(torch.nn.modules.loss._Loss):
 
     __constants__ = ['ignore_index', 'reduction', 'n']

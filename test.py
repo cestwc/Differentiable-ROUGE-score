@@ -34,12 +34,14 @@ def plot_trend(mat, title, xticks, yticks, xlabel, ylabel):
 
 import gramgen
 import torch
-
-g = gramgen.GramGenerateLoss(reduction = 'intersection', ignore_index = 1)
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+g = gramgen.GramGenerateLoss(reduction = 'intersection', ignore_index = 1).to(device)
 
 torch.manual_seed(1234)
-x = torch.rand(2, 10, 19)
-y = torch.randint(2, 10, (2, 19))
+x = torch.rand(2, 10, 19).to(device)
+
+y = torch.randint(2, 10, (2, 19)).to(device)
+
 y[:, 8:] = 1
 
 out = g(x, y)

@@ -1,0 +1,4 @@
+rouge-score
+transformers
+datasets
+

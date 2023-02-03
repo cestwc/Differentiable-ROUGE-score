@@ -1,7 +1,9 @@
 import rouge_score
+from rouge_score import rouge_scorer
+
 import torch
 import re
-from conv_core import sudoku, diagonal2
+from .conv_core import sudoku, diagonal2
 
 def convert_tokens_to_ids(*tokens):
 	all_tokens = set().union(*tokens)

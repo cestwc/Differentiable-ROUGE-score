@@ -1,4 +1,4 @@
-from trainer import RougeTrainer
+from gramgen import GGTrainer
 
 from transformers import AutoModelForMaskedLM, TrainingArguments
 import torch
@@ -33,7 +33,7 @@ def collate(batch):
     batch['attention_mask'] = (batch['input_ids'] != 1).long()
     return batch
 
-trainer = RougeTrainer(
+trainer = GGTrainer(
     model = model,
     args = training_args,
     train_dataset = dset['train'].shuffle(1234),
