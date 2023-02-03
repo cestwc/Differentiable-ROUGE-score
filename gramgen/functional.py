@@ -25,33 +25,27 @@ def gram_generate_loss(
 ) -> Tensor:
 
     overlap = batch_embedding(target, discrete_softmax(input.detach(), 1))
-
-    # attention mask here for ignore index
     ignored = (target == ignore_index).unsqueeze(-1).repeat(1, 1, overlap.shape[-1]).unsqueeze(1)
 
-    overlap = sudoku(overlap.unsqueeze(1)).long().float().detach()
+    intersection = sudoku(overlap.unsqueeze(1)).long().float().detach()
 
-    idx = 0 == (overlap.sum(dim = -1, keepdim = True).repeat(1, 1, 1, overlap.shape[-1]) + overlap.sum(dim = -2, keepdim = True).repeat(1, 1, overlap.shape[-2], 1))
-    overlap[idx] = 0.5
-    overlap = torch.clamp(overlap, 1e-1, 1)
-    overlap[ignored] = 0
+    idx = 0 == (intersection.sum(dim = -1, keepdim = True).repeat(1, 1, 1, intersection.shape[-1]) + intersection.sum(dim = -2, keepdim = True).repeat(1, 1, intersection.shape[-2], 1))
+    intersection[idx] = intersection.shape[0] / (idx.float().sum() + 1e-7)
+    intersection = torch.clamp(intersection, 1e-7, 1)
+    intersection[ignored] = 0
 
     
-    probs = batch_embedding(target, F.softmax(input, 1)) + 1e-7
-    numerators = - (overlap * probs.log().unsqueeze(1)).sum((-3, -2, -1)) * 2
-    # denominators = (target != ignore_index).sum(-1) - self.n + 1
-    denominators = F.cross_entropy(input, torch.ones_like(target) * ignore_index, reduction = 'none').mean(-1)
-
-    ret = numerators + denominators
+    log_probs = batch_embedding(target, F.log_softmax(input, 1)).unsqueeze(1)
+    ret = (- intersection * log_probs ).sum((-3, -2, -1)) + 0.5 * F.cross_entropy(input, torch.ones_like(target) * ignore_index, reduction='none').mean(1)
 
     if reduction == 'mean':
         return ret.mean()
     elif reduction == 'sum':
         return ret.sum()
-    elif reduction == 'overlap':
-        return overlap
+    elif reduction == 'intersection':
+        return intersection
     elif reduction == 'probs':
-        return probs
+        return log_probs.exp()
     else:
         return ret
 

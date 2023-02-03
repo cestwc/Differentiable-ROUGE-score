@@ -35,7 +35,7 @@ def plot_trend(mat, title, xticks, yticks, xlabel, ylabel):
 import gramgen
 import torch
 
-g = gramgen.GramGenerateLoss(reduction = 'overlap', ignore_index = 1)
+g = gramgen.GramGenerateLoss(reduction = 'intersection', ignore_index = 1)
 
 torch.manual_seed(1234)
 x = torch.rand(2, 10, 19)
@@ -44,5 +44,5 @@ y[:, 8:] = 1
 
 out = g(x, y)
 print(out.shape)
-plot_trend(out[0].squeeze().cpu().numpy(), 'overlap', y[0].numpy(), x[0].argmax(0).numpy(), 'y', r'$\hat{y}$')
+plot_trend(out[0].squeeze().cpu().numpy(), 'intersection', y[0].numpy(), x[0].argmax(0).numpy(), 'y', r'$\hat{y}$')
 plt.show()
