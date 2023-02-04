@@ -1,7 +1,6 @@
 from gramgen import GGTrainer
-from gramgen.metrics import compute_metrics
 
-from transformers import AutoModelForMaskedLM, Trainer, TrainingArguments, EarlyStoppingCallback
+from transformers import AutoModelForMaskedLM, TrainingArguments, Trainer
 import torch
 
 model_name = 'bert-base-uncased'
@@ -15,12 +14,12 @@ print(dset)
 
 
 training_args = TrainingArguments(
-    evaluation_strategy = "steps",
+    # evaluation_strategy = "steps",
     output_dir= model_name + '-maskedlm',
     overwrite_output_dir=True,
     num_train_epochs=1,
     max_steps = 700_000,
-    per_device_train_batch_size=4,
+    per_device_train_batch_size=16,
     save_steps=5_000,
     save_total_limit=20,
     prediction_loss_only=True,
@@ -39,13 +38,13 @@ def collate(batch):
     batch['labels'] = torch.nn.functional.pad(batch['labels'], (0, batch['input_ids'].shape[1] - batch['labels'].shape[1], 0, 0), 'constant', 1)
     return batch
 
-trainer = Trainer(
+trainer = GGTrainer(
     model = model,
     args = training_args,
     train_dataset = dset['train'].shuffle(1234),
     eval_dataset = dset['validation'].shard(300, 1),
     data_collator = collate,
-    compute_metrics = lambda x: print("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\n\n\nhhhhhhhhhhhhhhhhhhhhhhhhh"),
+    # compute_metrics = lambda x: print(x),
     # callbacks = [EarlyStoppingCallback(early_stopping_patience=7)],
 )
 
