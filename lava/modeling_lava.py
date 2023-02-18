@@ -64,10 +64,11 @@ class LavaModel(PreTrainedModel):
     ) -> MaskedLMOutput:
 
         if labels is not None:
-            decoder_input_ids = (labels == 1).long()
+            decoder_input_ids = (labels == -100).long()
+            decoder_attention_mask = 1. - decoder_input_ids
         else:
             decoder_input_ids = torch.zeros_like(input_ids)
-        decoder_attention_mask = 1. - decoder_input_ids
+            decoder_attention_mask = None
 
         decoder_outputs = self.decoder(
             input_ids=input_ids,
@@ -76,6 +77,9 @@ class LavaModel(PreTrainedModel):
             decoder_attention_mask = decoder_attention_mask,
             output_hidden_states=True
         )
+
+        if labels is None:
+            decoder_attention_mask = decoder_outputs.end_logits.sigmoid()
         
         attention_mask_cat = torch.cat([attention_mask, decoder_attention_mask], dim = 1)
         inputs_embeds_cat = torch.cat([decoder_outputs.encoder_last_hidden_state, decoder_outputs.decoder_hidden_states[-1]], dim = 1)
