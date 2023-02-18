@@ -63,9 +63,11 @@ class LavaModel(PreTrainedModel):
         **kwargs,
     ) -> MaskedLMOutput:
 
-
-        decoder_input_ids = (labels == 1).long()
-        decoder_attention_mask = (labels != 1).float()
+        if labels is not None:
+            decoder_input_ids = (labels == 1).long()
+        else:
+            decoder_input_ids = torch.zeros_like(input_ids)
+        decoder_attention_mask = 1. - decoder_input_ids
 
         decoder_outputs = self.decoder(
             input_ids=input_ids,
@@ -77,7 +79,6 @@ class LavaModel(PreTrainedModel):
         
         attention_mask_cat = torch.cat([attention_mask, decoder_attention_mask], dim = 1)
         inputs_embeds_cat = torch.cat([decoder_outputs.encoder_last_hidden_state, decoder_outputs.decoder_hidden_states[-1]], dim = 1)
-        labels_cat = torch.cat([input_ids, labels], dim = 1)
         
         encoder_outputs = self.encoder(
             attention_mask=attention_mask_cat,
@@ -88,7 +89,11 @@ class LavaModel(PreTrainedModel):
         
         encoder_outputs.logits[:,:, self.encoder.config.eos_token_id] += torch.cat([torch.zeros_like(attention_mask), decoder_outputs.end_logits], dim = 1)
 
-        loss_fct = CrossEntropyLoss()
-        encoder_outputs.loss = loss_fct(encoder_outputs.logits.reshape(-1, self.encoder.config.vocab_size), labels_cat.view(-1))
-
-        return encoder_outputs
+        if labels is not None:
+            loss_fct = CrossEntropyLoss()
+            return MaskedLMOutput(
+                loss = loss_fct(encoder_outputs.logits.reshape(-1, self.encoder.config.vocab_size), torch.cat([input_ids, labels], dim = 1).view(-1)),
+                **encoder_outputs
+            )
+        else:
+            return encoder_outputs
