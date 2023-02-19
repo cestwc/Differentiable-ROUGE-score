@@ -20,6 +20,8 @@ class LavaModel(PreTrainedModel):
 
         self.decoder = AutoModelForQuestionAnswering.from_config(config.decoder)
         self.encoder = AutoModelForMaskedLM.from_config(config.encoder)
+
+        self.decoder.qa_outputs.bias.requires_grad = False
         
         self.decoder.config = self.config.decoder
         self.encoder.config = self.config.encoder
@@ -53,6 +55,9 @@ class LavaModel(PreTrainedModel):
         inst = cls(config)
         inst.encoder = encoder
         inst.decoder = decoder
+
+        inst.decoder.qa_outputs.bias.requires_grad = False
+
         return inst
 
     def forward(
@@ -68,7 +73,7 @@ class LavaModel(PreTrainedModel):
             decoder_attention_mask = 1. - decoder_input_ids
         else:
             decoder_input_ids = torch.zeros_like(input_ids)
-            decoder_attention_mask = None
+            decoder_attention_mask = torch.ones_like(decoder_input_ids)
 
         decoder_outputs = self.decoder(
             input_ids=input_ids,
@@ -79,7 +84,7 @@ class LavaModel(PreTrainedModel):
         )
 
         if labels is None:
-            decoder_attention_mask = decoder_outputs.end_logits.sigmoid()
+            decoder_attention_mask = (decoder_outputs.end_logits < 0).float()
         
         attention_mask_cat = torch.cat([attention_mask, decoder_attention_mask], dim = 1)
         inputs_embeds_cat = torch.cat([decoder_outputs.encoder_last_hidden_state, decoder_outputs.decoder_hidden_states[-1]], dim = 1)
