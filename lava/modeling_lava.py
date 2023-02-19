@@ -104,8 +104,10 @@ class LavaModel(PreTrainedModel):
             trunc = (decoder_attention_mask == 0).all(dim=0).float().argmax()
             decoder_attention_mask = decoder_attention_mask[:, :trunc]
             decoder_last_hidden_state = decoder_outputs.decoder_hidden_states[-1][:, :trunc]
+            end_logits = decoder_outputs.end_logits[:, :trunc]
         else:
             decoder_last_hidden_state = decoder_outputs.decoder_hidden_states[-1]
+            end_logits = decoder_outputs.end_logits
 
         
         attention_mask_cat = torch.cat([attention_mask, decoder_attention_mask], dim = 1)
@@ -118,7 +120,7 @@ class LavaModel(PreTrainedModel):
             output_attentions=True
         )
         
-        encoder_outputs.logits[:,:, self.encoder.config.eos_token_id] += torch.cat([torch.zeros_like(attention_mask), decoder_outputs.end_logits], dim = 1)
+        encoder_outputs.logits[:,:, self.encoder.config.eos_token_id] += torch.cat([torch.zeros_like(attention_mask), end_logits], dim = 1)
 
         if labels is not None:
             loss_fct = CrossEntropyLoss()
