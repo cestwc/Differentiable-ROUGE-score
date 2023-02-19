@@ -75,6 +75,18 @@ class LavaModel(PreTrainedModel):
             decoder_input_ids = torch.zeros_like(input_ids)
             decoder_attention_mask = torch.ones_like(decoder_input_ids)
 
+        input_ids_ = input_ids.clone()
+        if self.training:
+            masked_indices = torch.bernoulli(torch.ones_like(input_ids) * 0.15).bool()
+            input_ids_[~masked_indices] = -100
+
+            indices_replaced = torch.bernoulli(torch.ones_like(input_ids) * 0.8).bool() & masked_indices
+            input_ids[indices_replaced] = 50264
+
+            indices_random = torch.bernoulli(torch.ones_like(input_ids) * 0.5).bool() & masked_indices & ~indices_replaced
+            random_words = torch.randint_like(input_ids, high=50264)
+            input_ids[indices_random] = random_words[indices_random]
+
         decoder_outputs = self.decoder(
             input_ids=input_ids,
             attention_mask=attention_mask,
@@ -101,7 +113,7 @@ class LavaModel(PreTrainedModel):
         if labels is not None:
             loss_fct = CrossEntropyLoss()
             return MaskedLMOutput(
-                loss = loss_fct(encoder_outputs.logits.reshape(-1, self.encoder.config.vocab_size), torch.cat([input_ids, labels], dim = 1).view(-1)),
+                loss = loss_fct(encoder_outputs.logits.reshape(-1, self.encoder.config.vocab_size), torch.cat([input_ids_, labels], dim = 1).view(-1)),
                 **encoder_outputs
             )
         else:
