@@ -96,13 +96,20 @@ class LavaModel(PreTrainedModel):
         )
 
         if labels is None:
-            decoder_attention_mask = (decoder_outputs.end_logits < -1.4).float()
+            decoder_attention_mask = (decoder_outputs.end_logits < -0).float()
             first_zeros = (decoder_attention_mask == 0).float().argmax(dim=1)
             zero_mask = torch.arange(decoder_attention_mask.shape[1]).unsqueeze(0).to(first_zeros.device) > first_zeros.unsqueeze(1)
             decoder_attention_mask.masked_fill_(zero_mask, 0)
+
+            trunc = (decoder_attention_mask == 0).all(dim=0).float().argmax()
+            decoder_attention_mask = decoder_attention_mask[:, :trunc]
+            decoder_last_hidden_state = decoder_outputs.decoder_hidden_states[-1][:, :trunc]
+        else:
+            decoder_last_hidden_state = decoder_outputs.decoder_hidden_states[-1]
+
         
         attention_mask_cat = torch.cat([attention_mask, decoder_attention_mask], dim = 1)
-        inputs_embeds_cat = torch.cat([decoder_outputs.encoder_last_hidden_state, decoder_outputs.decoder_hidden_states[-1]], dim = 1)
+        inputs_embeds_cat = torch.cat([decoder_outputs.encoder_last_hidden_state, decoder_last_hidden_state], dim = 1)
         
         encoder_outputs = self.encoder(
             attention_mask=attention_mask_cat,
