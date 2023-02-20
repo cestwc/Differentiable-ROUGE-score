@@ -68,12 +68,8 @@ class LavaModel(PreTrainedModel):
         **kwargs,
     ) -> MaskedLMOutput:
 
-        if labels is not None:
-            decoder_input_ids = (labels == -100).long()
-            decoder_attention_mask = 1. - decoder_input_ids
-        else:
-            decoder_input_ids = torch.zeros_like(input_ids)
-            decoder_attention_mask = torch.ones_like(decoder_input_ids)
+        decoder_attention_mask = torch.ones_like(input_ids) if labels is None else 1 - (labels == -100).float()
+        decoder_input_ids = torch.where(decoder_attention_mask.bool(), 50264, 1).long()
 
         input_ids_ = input_ids.clone()
         if self.training:
@@ -100,18 +96,24 @@ class LavaModel(PreTrainedModel):
             first_zeros = (decoder_attention_mask == 0).float().argmax(dim=1)
             zero_mask = torch.arange(decoder_attention_mask.shape[1]).unsqueeze(0).to(first_zeros.device) > first_zeros.unsqueeze(1)
             decoder_attention_mask.masked_fill_(zero_mask, 0)
-
-            trunc = (decoder_attention_mask == 0).all(dim=0).float().argmax()
-            decoder_attention_mask = decoder_attention_mask[:, :trunc]
-            decoder_last_hidden_state = decoder_outputs.decoder_hidden_states[-1][:, :trunc]
-            end_logits = decoder_outputs.end_logits[:, :trunc]
         else:
-            decoder_last_hidden_state = decoder_outputs.decoder_hidden_states[-1]
-            end_logits = decoder_outputs.end_logits
+            labels_cat = torch.cat([input_ids_, labels], dim = 1)
 
-        
+        end_logits_cat = torch.cat([torch.zeros_like(attention_mask), decoder_outputs.end_logits], dim = 1)
         attention_mask_cat = torch.cat([attention_mask, decoder_attention_mask], dim = 1)
-        inputs_embeds_cat = torch.cat([decoder_outputs.encoder_last_hidden_state, decoder_last_hidden_state], dim = 1)
+        inputs_embeds_cat = torch.cat([decoder_outputs.encoder_last_hidden_state, decoder_outputs.decoder_hidden_states[-1]], dim = 1)
+
+        attention_sort = torch.arange(attention_mask_cat.size(1)).unsqueeze(0).repeat(attention_mask_cat.size(0), 1)
+        attention_sort[attention_mask_cat == 0] = attention_mask_cat.size(1) + 1
+        sorted_order = torch.argsort(attention_sort, dim=1)
+        sorted_order = sorted_order[:, :attention_mask_cat.sum(dim = 1).max().long()].to(attention_mask_cat.device)
+        
+        attention_mask_cat = torch.gather(attention_mask_cat, 1, sorted_order)
+        end_logits_cat = torch.gather(end_logits_cat, 1, sorted_order)
+        inputs_embeds_cat = torch.gather(inputs_embeds_cat, 1, sorted_order.unsqueeze(2).expand(-1, -1, inputs_embeds_cat.size(2)))
+        if labels is not None:
+            labels_cat = torch.gather(labels_cat, 1, sorted_order)
+
         
         encoder_outputs = self.encoder(
             attention_mask=attention_mask_cat,
@@ -120,12 +122,12 @@ class LavaModel(PreTrainedModel):
             output_attentions=True
         )
         
-        encoder_outputs.logits[:,:, self.encoder.config.eos_token_id] += torch.cat([torch.zeros_like(attention_mask), end_logits], dim = 1)
+        encoder_outputs.logits[:,:, self.encoder.config.eos_token_id] += end_logits_cat
 
         if labels is not None:
             loss_fct = CrossEntropyLoss()
             return MaskedLMOutput(
-                loss = loss_fct(encoder_outputs.logits.reshape(-1, self.encoder.config.vocab_size), torch.cat([input_ids_, labels], dim = 1).view(-1)),
+                loss = loss_fct(encoder_outputs.logits.reshape(-1, self.encoder.config.vocab_size), labels_cat.view(-1)),
                 **encoder_outputs
             )
         else:
