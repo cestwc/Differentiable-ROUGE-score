@@ -68,7 +68,7 @@ class LavaModel(PreTrainedModel):
         **kwargs,
     ) -> MaskedLMOutput:
 
-        decoder_attention_mask = torch.ones_like(input_ids) if labels is None else 1 - (labels == -100).float()
+        decoder_attention_mask = torch.ones_like(input_ids) if labels is None else (labels != -100).float()
         decoder_input_ids = torch.where(decoder_attention_mask.bool(), 50264, 1).long()
 
         input_ids_ = input_ids.clone()
@@ -99,7 +99,7 @@ class LavaModel(PreTrainedModel):
         else:
             labels_cat = torch.cat([input_ids_, labels], dim = 1)
 
-        end_logits_cat = torch.cat([torch.zeros_like(attention_mask), decoder_outputs.end_logits], dim = 1)
+        end_logits_cat = torch.cat([torch.zeros_like(attention_mask), decoder_outputs.end_logits.tanh()], dim = 1)
         attention_mask_cat = torch.cat([attention_mask, decoder_attention_mask], dim = 1)
         inputs_embeds_cat = torch.cat([decoder_outputs.encoder_last_hidden_state, decoder_outputs.decoder_hidden_states[-1]], dim = 1)
 
