@@ -30,12 +30,17 @@ class LavaModelSmall(LavaModel):
             BartConfig(encoder_layers = 1, decoder_layers = 1, d_model = 768, decoder_ffn_dim = 3072, encoder_ffn_dim = 3072)
             )
 
-        decoder.load_state_dict({k:decoder_state_dict[k] for k in decoder.state_dict()})
+
         
         config = LavaConfig.from_encoder_decoder_configs(encoder.config, decoder.config, **kwargs)
         inst = cls(config)
         inst.encoder = encoder
         inst.decoder = decoder
+
+        inst.decoder.load_state_dict({k:decoder_state_dict[k] for k in decoder.state_dict()})
+        inst.decoder.model.shared = encoder.roberta.embeddings.word_embeddings
+        inst.decoder.model.encoder.embed_tokens = encoder.roberta.embeddings.word_embeddings
+        inst.decoder.model.decoder.embed_tokens = encoder.roberta.embeddings.word_embeddings
 
         inst.decoder.qa_outputs.bias.requires_grad = False
 
