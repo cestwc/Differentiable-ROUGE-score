@@ -65,11 +65,13 @@ class LavaModel(PreTrainedModel):
         input_ids: Optional[torch.LongTensor] = None,
         attention_mask: Optional[torch.FloatTensor] = None,
         labels: Optional[torch.LongTensor] = None,
+        generate = False,
         **kwargs,
     ) -> MaskedLMOutput:
 
         decoder_attention_mask = torch.ones_like(input_ids) if labels is None else (labels != -100).float()
         decoder_input_ids = torch.where(decoder_attention_mask.bool(), 50264, 1).long()
+        decoder_input_ids[:, 0] = 0
 
         input_ids_ = input_ids.clone()
         if self.training:
@@ -88,7 +90,7 @@ class LavaModel(PreTrainedModel):
             attention_mask=attention_mask,
             decoder_input_ids = decoder_input_ids,
             decoder_attention_mask = decoder_attention_mask,
-            output_hidden_states=True
+            output_hidden_states=True,
         )
 
         if labels is None:
@@ -123,6 +125,10 @@ class LavaModel(PreTrainedModel):
         )
         
         encoder_outputs.logits[:,:, self.encoder.config.eos_token_id] += end_logits_cat
+
+        if generate:
+            attention_mask_generate = torch.logical_and(attention_mask_cat, torch.logical_not(torch.nn.functional.pad(attention_mask, (0, attention_mask_cat.size(1) - attention_mask.size(1)))))
+            encoder_outputs.logits[~attention_mask_generate] = 1
 
         if labels is not None:
             loss_fct = CrossEntropyLoss()
